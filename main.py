@@ -117,8 +117,43 @@ def load_json_data():
 
     return None
 
+# STEP 7-4: JSON 패턴 판정
+def classify_json_pattern(matrix, filter_cross, filter_x):
+
+    score_cross = mac(matrix, filter_cross)
+    score_x = mac(matrix, filter_x)
+
+    if abs(score_cross - score_x) <= EPSILON:
+        result = "UNDECIDED"
+    elif score_cross > score_x:
+        result = "Cross"
+    else:
+        result = "X"
+
+    return score_cross, score_x, result
+
+# STEP 7-5: 판정 라벨 정규화
+def normalize_label(label):
+    label = str(label).strip().lower()
+
+    if label in ("+", "cross"):
+        return "Cross"
+
+    elif label == "x":
+        return "X"
+
+    elif label == "undecided":
+        return "UNDECIDED"
+
+    return "UNKNOWN"
+
 # STEP 7-3: JSON 패턴 및 필터 추출
 def extract_json_patterns(data):
+    total_count = 0
+    pass_count = 0
+    fail_count = 0
+    failed_cases = []
+
     filters = data["filters"]
     patterns = data["patterns"]
 
@@ -149,6 +184,65 @@ def extract_json_patterns(data):
         print(f"입력 배열 검증: {valid_input}")
         print(f"Cross 필터 검증: {valid_cross}")
         print(f"X 필터 검증: {valid_x}")
+
+        # 배열 검증 실패 시 연산하지 않음
+        if not (valid_input and valid_cross and valid_x):
+            print("오류: 배열 또는 필터 크기 불일치")
+            continue
+
+
+        # MAC 연산 및 판정
+        score_cross, score_x, result = classify_json_pattern(
+            matrix, filter_cross, filter_x
+        )
+
+        print("\n[MAC 분석 결과]")
+        print("Cross 점수:", score_cross)
+        print("X 점수:", score_x)
+        print("최종 판정:", result)
+
+        # STEP 7-5: 예상 판정과 실제 판정 비교
+        expected_label = normalize_label(expected)
+
+        if result == expected_label:
+            status = "PASS"
+        else:
+            status = "FAIL"
+
+        print("\n[판정 검증]")
+        print("예상 판정:", expected_label)
+        print("실제 판정:", result)
+        print("검증 결과:", status)
+
+        total_count += 1
+
+        if status == "PASS":
+            pass_count += 1
+        else:
+            fail_count += 1
+            failed_cases.append({
+                "name": pattern_name,
+                "expected": expected_label,
+                "actual": result,
+                "cross": score_cross,
+                "x": score_x
+            })
+
+    print("\n=== 전체 테스트 결과 요약 ===")
+    print("총 테스트:", total_count)
+    print("PASS:", pass_count)
+    print("FAIL:", fail_count)
+
+    if failed_cases:
+        print("\n[실패 케이스]")
+
+        for case in failed_cases:
+            print(
+                f"{case['name']}: "
+                f"예상={case['expected']}, "
+                f"실제={case['actual']}"
+            )
+
 
 # 6. 사용자 입력 모드
 def user_input_mode():
