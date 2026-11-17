@@ -68,6 +68,42 @@ def mac(matrix, filter_matrix):
 
     return total
 
+# 5. 패턴 필터 정의
+FILTER_CROSS = [
+    [0, 1, 0],
+    [1, 1, 1],
+    [0, 1, 0]
+]
+
+FILTER_X = [
+    [1, 0, 1],
+    [0, 1, 0],
+    [1, 0, 1]
+]
+
+EPSILON = 1e-9
+
+# 6. 패턴 판정 함수
+def classify_pattern(matrix):
+    # Cross 필터 MAC 점수
+    score_cross = mac(matrix, FILTER_CROSS)
+
+    # X 필터 MAC 점수
+    score_x = mac(matrix, FILTER_X)
+
+    # 점수 차이
+    difference = abs(score_cross - score_x)
+
+    # 판정
+    if difference <= EPSILON:
+        result = "UNDECIDED"
+    elif score_cross > score_x:
+        result = "Cross"
+    else:
+        result = "X"
+
+    return score_cross, score_x, result
+
 # 4. 메인 프로그램
 def main():
     print("=== Mini NPU Simulator ===")
@@ -88,20 +124,30 @@ def main():
     print("배열 A:", validate_matrix(matrix_a))
     print("배열 B:", validate_matrix(matrix_b))
 
-    # 십자가 필터 정의
-    filter_cross = [
-        [0, 1, 0],
-        [1, 1, 1],
-        [0, 1, 0]
-    ]
 
     # MAC 연산 수행
-    score_a = mac(matrix_a, filter_cross)
-    score_b = mac(matrix_b, filter_cross)
+    score_a = mac(matrix_a, FILTER_CROSS)
+    score_b = mac(matrix_b, FILTER_CROSS)
 
     print("\n[MAC 연산 결과]")
     print("배열 A 점수:", score_a)
     print("배열 B 점수:", score_b)
+
+    # STEP 5: 패턴 판정
+    print("\n[패턴 판정 결과]")
+
+    score_cross_a, score_x_a, result_a = classify_pattern(matrix_a)
+    score_cross_b, score_x_b, result_b = classify_pattern(matrix_b)
+
+    print("\n배열 A")
+    print("Cross 점수:", score_cross_a)
+    print("X 점수:", score_x_a)
+    print("최종 판정:", result_a)
+
+    print("\n배열 B")
+    print("Cross 점수:", score_cross_b)
+    print("X 점수:", score_x_b)
+    print("최종 판정:", result_b)
 
 if __name__ == "__main__":
     main()
