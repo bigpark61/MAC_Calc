@@ -2,8 +2,10 @@
 
 # Mission E3 - Mini NPU Simulator
 # STEP 6: 사용자 입력 모드 구현
+import time
 import json
 from pathlib import Path
+
 
 EPSILON = 1e-9
 
@@ -67,6 +69,45 @@ def mac(matrix, filter_matrix):
 
     return total
 
+
+# STEP 8: MAC 연산시간 측정
+def measure_mac_time(matrix, filter_matrix, repeat=10):
+
+    # 배열 크기
+    n = len(matrix)
+
+    # 크기 검증
+    if not validate_matrix(matrix, n):
+        raise ValueError("입력 배열 크기 오류")
+
+    if not validate_matrix(filter_matrix, n):
+        raise ValueError("필터 크기 오류")
+
+    # 사전 실행: 초기 실행 영향 완화
+    mac(matrix, filter_matrix)
+
+    elapsed_times = []
+
+    # MAC 연산 반복 측정
+    for _ in range(repeat):
+
+        start_time = time.perf_counter()
+
+        mac(matrix, filter_matrix)
+
+        end_time = time.perf_counter()
+
+        elapsed_ms = (end_time - start_time) * 1000
+
+        elapsed_times.append(elapsed_ms)
+
+    # 평균 시간
+    average_ms = sum(elapsed_times) / repeat
+
+    # 원소별 곱셈 횟수
+    operation_count = n * n
+
+    return average_ms, operation_count
 
 # 5. 두 MAC 점수 비교
 def compare_scores(score_a, score_b):
@@ -279,6 +320,54 @@ def user_input_mode():
     print("B 점수:", score_b)
     print("판정:", result)
 
+# STEP 8: 배열 크기별 성능 분석
+def analyze_mac_performance(data):
+
+    print("\n=== MAC 성능 분석 ===")
+    print("크기       평균 시간(ms)     연산 횟수")
+    print("-" * 43)
+
+    # 3x3 테스트 배열
+    matrix_3 = [
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 1, 0]
+    ]
+
+    filter_3 = [
+        [0, 1, 0],
+        [1, 1, 1],
+        [0, 1, 0]
+    ]
+
+    # 3x3 측정
+    avg_ms, operations = measure_mac_time(
+        matrix_3, filter_3, repeat=10
+    )
+
+    print(f"{'3x3':<10} {avg_ms:<17.6f} {operations}")
+
+    # JSON의 크기별 필터 활용
+    for n in [5, 13, 25]:
+
+        size_key = f"size_{n}"
+
+        filter_cross = data["filters"][size_key]["cross"]
+
+        # 필터 자체를 입력 배열로 사용하여
+        # 크기별 MAC 성능 측정
+        avg_ms, operations = measure_mac_time(
+            filter_cross, filter_cross, repeat=10
+        )
+
+        print(
+            f"{n}x{n:<7} "
+            f"{avg_ms:<17.6f} "
+            f"{operations}"
+        )
+
+    print("\n시간복잡도: O(N^2)")
+
 # STEP 7-2: JSON 분석 모드
 def json_analysis_mode():
     data = load_json_data()
@@ -292,24 +381,43 @@ def json_analysis_mode():
 
     # STEP 7-3
     extract_json_patterns(data)
+    # STEP 8: MAC 성능 측정
+    analyze_mac_performance(data)
 
 # 7. 메인 메뉴
+
+# STEP 9-1: 메뉴 입력 예외 처리
 def main():
-    print("\n=== Mini NPU Simulator ===")
 
-    print("\n[모드 선택]")
-    print("1. 사용자 입력 (3x3)")
-    print("2. data.json 분석")
+    while True:
+        print("\n=== Mini NPU Simulator ===")
 
-    choice = input("선택: ").strip()
+        print("\n[모드 선택]")
+        print("1. 사용자 입력 (3x3)")
+        print("2. data.json 분석")
+        print("0. 종료")
 
-    if choice == "1":
-        user_input_mode()
+        try:
+            choice = input("선택: ").strip()
 
-    elif choice == "2":
-        json_analysis_mode()
-    else:
-        print("잘못된 메뉴 선택입니다.")
+        except (EOFError, KeyboardInterrupt):
+            print("\n프로그램을 종료합니다.")
+            break
+
+        if choice == "1":
+            user_input_mode()
+
+        elif choice == "2":
+            json_analysis_mode()
+
+        elif choice == "0":
+            print("\n프로그램을 종료합니다.")
+            break
+
+        else:
+            print("\n[입력 오류]")
+            print("0, 1, 2 중 하나를 선택하세요.")
+
 
 
 if __name__ == "__main__":
