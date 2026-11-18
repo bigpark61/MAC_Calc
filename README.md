@@ -35,7 +35,7 @@
 E3_Mini_NPU/
 ├── main.py               # 메뉴, MAC 연산, JSON 분석, 성능 측정
 ├── data.json             # 필터와 패턴 데이터
-├── test_dimensions.py    # 배열·필터 크기 검증
+├── test_dimension.py    # 배열·필터 크기 검증
 ├── test_mac.py           # MAC 정상/오류 입력 테스트
 ├── test_final.py         # 최종 자동 통합 테스트
 └── README.md             # 프로젝트 설명서
@@ -203,7 +203,7 @@ N×N 배열에 대해 모든 원소를 한 번씩 방문하므로 곱셈 횟수�
 다음 명령으로 최종 테스트를 실행합니다.
 
 ```powershell
-python test_dimensions.py
+python test_dimension.py
 python test_mac.py
 python test_final.py
 ```

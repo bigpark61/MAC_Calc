@@ -1,4 +1,3 @@
-
 # Python cache
 __pycache__/
 *.pyc
@@ -9,7 +8,7 @@ __pycache__/
 venv/
 env/
 
-# Environment variables and secrets
+# Environment variables
 .env
 .env.*
 !.env.example
@@ -24,7 +23,7 @@ data_temp.json
 .pytest_cache/
 .coverage
 
-# VS Code local settings
+# VS Code settings
 .vscode/
 
 # OS files
