@@ -1,0 +1,32 @@
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Backup and temporary files
+data_backup.json
+data_temp.json
+*.bak
+*.tmp
+
+# Test cache
+.pytest_cache/
+.coverage
+
+# VS Code local settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
