@@ -177,6 +177,12 @@ def load_json_data():
             print("오류: patterns 구조가 올바르지 않습니다.")
             return None
 
+        try:
+            data["filters"] = normalize_filter_keys(data["filters"])
+        except ValueError as error:
+            print("오류: filters 키 정규화 실패:", error)
+            return None
+
         print("\n[data.json 로드 성공]")
         print("필터 크기:", list(data["filters"].keys()))
         print("패턴 개수:", len(data["patterns"]))
@@ -221,6 +227,33 @@ def normalize_label(label):
         return "UNDECIDED"
 
     return "UNKNOWN"
+
+
+def normalize_filter_keys(filters):
+    normalized_filters = {}
+
+    for size_key, size_filters in filters.items():
+        if not isinstance(size_filters, dict):
+            raise ValueError(f"{size_key} 필터 구조가 올바르지 않습니다.")
+
+        normalized_size_filters = {}
+
+        for filter_name, filter_matrix in size_filters.items():
+            label = normalize_label(filter_name)
+            canonical_key = {"Cross": "cross", "X": "x"}.get(label)
+
+            if canonical_key is None:
+                raise ValueError(f"지원하지 않는 필터 이름: {filter_name}")
+
+            if canonical_key in normalized_size_filters:
+                raise ValueError(f"중복된 필터 이름: {filter_name}")
+
+            normalized_size_filters[canonical_key] = filter_matrix
+
+        normalized_filters[size_key] = normalized_size_filters
+
+    return normalized_filters
+
 
 # STEP 7-3: JSON 패턴 및 필터 추출
 def extract_json_patterns(data):
@@ -341,9 +374,11 @@ def user_input_mode():
     print_matrix(matrix_b, "배열 B")
     print_matrix(filter_matrix, "필터 F")
 
-    # MAC 계산
+    # MAC 계산 시간 측정
+    start_time = time.perf_counter()
     score_a = mac(matrix_a, filter_matrix)
     score_b = mac(matrix_b, filter_matrix)
+    elapsed_ms = (time.perf_counter() - start_time) * 1000
 
     # 점수 비교
     result = compare_scores(score_a, score_b)
@@ -353,6 +388,7 @@ def user_input_mode():
     print("A 점수:", score_a)
     print("B 점수:", score_b)
     print("판정:", result)
+    print(f"연산 시간: {elapsed_ms:.6f} ms")
 
 # STEP 8: 배열 크기별 성능 분석
 def analyze_mac_performance(data):

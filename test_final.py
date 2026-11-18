@@ -8,6 +8,7 @@ from main import (
     mac,
     validate_mac_dimensions,
     normalize_label,
+    normalize_filter_keys,
     classify_json_pattern,
     measure_mac_time,
 )
@@ -54,6 +55,20 @@ except ValueError:
 # 4. 라벨 정규화
 check("Cross 라벨 정규화", normalize_label("+") == "Cross")
 check("X 라벨 정규화", normalize_label("x") == "X")
+
+normalized_filters = normalize_filter_keys({
+    "size_3": {"+": matrix, " X ": matrix}
+})
+check(
+    "필터 키 별칭 정규화",
+    normalized_filters == {"size_3": {"cross": matrix, "x": matrix}},
+)
+
+try:
+    normalize_filter_keys({"size_3": {"cross": matrix, "+": matrix}})
+    check("중복 필터 키 거부", False)
+except ValueError:
+    check("중복 필터 키 거부", True)
 
 # 5. epsilon 판정
 tie_matrix = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]
