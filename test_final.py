@@ -2,7 +2,11 @@
 # STEP 9-5-5: Mission E3 최종 자동 테스트
 
 import json
+import main
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest.mock import patch
 
 from main import (
     mac,
@@ -11,6 +15,7 @@ from main import (
     normalize_filter_keys,
     classify_json_pattern,
     measure_mac_time,
+    user_input_mode,
 )
 
 passed = 0
@@ -112,7 +117,42 @@ check(
     avg_ms >= 0 and operations == 9
 )
 
-# 8. 최종 결과
+# 8. 사용자 모드의 순수 MAC 시간 측정
+input_rows = [
+    "0 1 0", "1 1 1", "0 1 0",
+    "0 1 0", "1 1 1", "0 1 0",
+    "0 1 0", "1 1 1", "0 1 0",
+]
+timer_calls = []
+validation_calls = []
+output = StringIO()
+original_validate = main.validate_mac_dimensions
+
+
+def track_validation(matrix, filter_matrix):
+    validation_calls.append(len(timer_calls))
+    return original_validate(matrix, filter_matrix)
+
+
+def fake_perf_counter():
+    timer_calls.append(None)
+    return 1 + (len(timer_calls) - 1) * 0.001
+
+
+with patch("builtins.input", side_effect=input_rows), \
+        patch("main.validate_mac_dimensions", side_effect=track_validation), \
+        patch("main.time.perf_counter", side_effect=fake_perf_counter), \
+        redirect_stdout(output):
+    user_input_mode()
+
+check(
+    "사용자 모드 측정에서 검증 제외",
+    validation_calls == [0, 0]
+    and len(timer_calls) == 2
+    and "연산 시간: 1.000000 ms" in output.getvalue(),
+)
+
+# 9. 최종 결과
 print("\n=== 최종 통합 테스트 결과 ===")
 print("총 테스트:", passed + failed)
 print("PASS:", passed)

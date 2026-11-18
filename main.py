@@ -90,11 +90,13 @@ def validate_mac_dimensions(matrix, filter_matrix):
 
 # STEP 9-4-2: 크기 검증을 적용한 MAC 함수
 def mac(matrix, filter_matrix):
-
     # MAC 연산 전 배열과 필터 크기 검증
     validate_mac_dimensions(matrix, filter_matrix)
 
-    # 기존 MAC 연산
+    return _mac_unchecked(matrix, filter_matrix)
+
+
+def _mac_unchecked(matrix, filter_matrix):
     total = 0
 
     for i in range(len(matrix)):
@@ -374,10 +376,14 @@ def user_input_mode():
     print_matrix(matrix_b, "배열 B")
     print_matrix(filter_matrix, "필터 F")
 
+    # 크기 검증은 측정 구간 밖에서 수행
+    validate_mac_dimensions(matrix_a, filter_matrix)
+    validate_mac_dimensions(matrix_b, filter_matrix)
+
     # MAC 계산 시간 측정
     start_time = time.perf_counter()
-    score_a = mac(matrix_a, filter_matrix)
-    score_b = mac(matrix_b, filter_matrix)
+    score_a = _mac_unchecked(matrix_a, filter_matrix)
+    score_b = _mac_unchecked(matrix_b, filter_matrix)
     elapsed_ms = (time.perf_counter() - start_time) * 1000
 
     # 점수 비교
